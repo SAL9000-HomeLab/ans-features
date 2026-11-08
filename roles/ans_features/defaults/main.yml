@@ -1,0 +1,22 @@
+---
+# roles/ans_features/defaults/main.yml
+#
+# One variable per feature. Each takes:
+#   present  install or turn on the feature
+#   absent   remove or turn off the feature
+#   ""       leave the feature as it is (the default)
+# Set them on the inventory, group or host. A host's value replaces its group's for that feature only.
+
+# OpenSSH Server (Windows capability OpenSSH.Server~~~~0.0.1.0). present also sets the sshd service to start
+# automatically and starts it, which creates C:\ProgramData\ssh\sshd_config on the first start. absent stops sshd
+# and removes the capability.
+ans_features_openssh_server: ""
+
+# Telnet Client (Windows optional feature TelnetClient).
+ans_features_telnet_client: ""
+
+# Restart the host when a change needs it. With false the role only reports that a restart is pending.
+ans_features_reboot: false
+
+# Passed to win_reboot when ans_features_reboot is true.
+ans_features_reboot_timeout: 1800
