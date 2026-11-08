@@ -1,0 +1,15 @@
+---
+# roles/ans_features/tasks/telnet_client.yml
+#
+# TelnetClient is an optional feature on both Windows 11 and Windows Server, and its files ship with Windows, so it
+# needs no download.
+
+- name: Make Telnet Client {{ ans_features_telnet_client }}
+  ansible.windows.win_optional_feature:
+    name: TelnetClient
+    state: "{{ ans_features_telnet_client }}"
+  register: ans_features__telnet_result
+
+- name: Note whether Telnet Client needs a restart
+  ansible.builtin.set_fact:
+    ans_features__reboot_required: "{{ ans_features__reboot_required or ans_features__telnet_result.reboot_required }}"

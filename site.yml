@@ -1,0 +1,7 @@
+---
+# Adds and removes Windows features. Windows hosts connect as an administrator.
+
+- name: Manage Windows features
+  hosts: windows
+  roles:
+    - role: ans_features

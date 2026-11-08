@@ -1,0 +1,62 @@
+---
+# roles/ans_features/tasks/main.yml
+#
+# Each feature has its own task file, included only when its variable is present or absent. The role changes nothing
+# on hosts that are not Windows.
+
+- name: Check the feature variables
+  ansible.builtin.assert:
+    that:
+      - (lookup('ansible.builtin.vars', item) | default('', true)) in ['', 'present', 'absent']
+    fail_msg: "{{ item }} must be present, absent or empty, not '{{ lookup('ansible.builtin.vars', item) }}'"
+    quiet: true
+  loop:
+    - ans_features_openssh_server
+    - ans_features_telnet_client
+
+- name: Gather the OS family
+  ansible.builtin.setup:
+    gather_subset: [min]
+  when: ansible_facts['os_family'] is not defined
+
+- name: Start with no restart pending
+  ansible.builtin.set_fact:
+    ans_features__reboot_required: false
+
+- name: Manage OpenSSH Server
+  ansible.builtin.include_tasks:
+    file: openssh_server.yml
+    apply:
+      tags: [openssh]
+  when:
+    - ansible_facts['os_family'] == 'Windows'
+    - ans_features_openssh_server | default('', true) | length > 0
+  tags: [openssh]
+
+- name: Manage Telnet Client
+  ansible.builtin.include_tasks:
+    file: telnet_client.yml
+    apply:
+      tags: [telnet]
+  when:
+    - ansible_facts['os_family'] == 'Windows'
+    - ans_features_telnet_client | default('', true) | length > 0
+  tags: [telnet]
+
+- name: Restart to finish the feature changes
+  ansible.windows.win_reboot:
+    reboot_timeout: "{{ ans_features_reboot_timeout }}"
+  when:
+    - ans_features__reboot_required | bool
+    - ans_features_reboot | bool
+  tags: [openssh, telnet]
+
+- name: Report a pending restart
+  ansible.builtin.debug:
+    msg: >-
+      A restart is needed to finish the feature changes on {{ inventory_hostname }}. Restart it, or set
+      ans_features_reboot to true to let the role do it.
+  when:
+    - ans_features__reboot_required | bool
+    - not ans_features_reboot | bool
+  tags: [openssh, telnet]

@@ -1,0 +1,37 @@
+---
+# roles/ans_features/tasks/openssh_server.yml
+#
+# OpenSSH Server is a Windows capability on Windows 11 and Server 2025. Server 2025 has it installed with sshd
+# disabled, so there present only enables and starts the service. On Windows 11, adding it downloads it from Windows
+# Update unless a source is configured by policy.
+
+- name: Look up the sshd service
+  ansible.windows.win_service_info:
+    name: sshd
+  register: ans_features__sshd_info
+
+- name: Stop and disable sshd before removing OpenSSH Server
+  ansible.windows.win_service:
+    name: sshd
+    state: stopped
+    start_mode: disabled
+  when:
+    - ans_features_openssh_server == 'absent'
+    - ans_features__sshd_info.exists
+
+- name: Make OpenSSH Server {{ ans_features_openssh_server }}
+  ansible.windows.win_capability:
+    name: OpenSSH.Server~~~~0.0.1.0
+    state: "{{ ans_features_openssh_server }}"
+  register: ans_features__openssh_result
+
+- name: Start sshd and start it automatically at boot
+  ansible.windows.win_service:
+    name: sshd
+    start_mode: auto
+    state: started
+  when: ans_features_openssh_server == 'present'
+
+- name: Note whether OpenSSH Server needs a restart
+  ansible.builtin.set_fact:
+    ans_features__reboot_required: "{{ ans_features__reboot_required or ans_features__openssh_result.reboot_required }}"

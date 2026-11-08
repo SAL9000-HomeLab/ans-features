@@ -1,0 +1,16 @@
+---
+galaxy_info:
+  author: Roland Serman
+  description: Adds and removes Windows features and capabilities, such as OpenSSH Server and Telnet Client
+  license: MIT
+  min_ansible_version: "2.16"
+  platforms:
+    - name: Windows
+      versions:
+        - "2025"
+  galaxy_tags:
+    - windows
+    - features
+    - openssh
+
+dependencies: []
